@@ -67,6 +67,14 @@ public class Header extends Page {
         return id;
     }
 
+    public void clickPositionfromID (String id) {
+        String xpath = "//a[@href='/positions/"+ id + "']";
+        WebElement positionId =getDriver().findElement(By.xpath(xpath));
+
+        click(positionId);
+
+    }
+
     public void assertHeader () {
         assertThat(headerTitle.getText().equals(headerText)).isTrue();
     }

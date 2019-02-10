@@ -6,6 +6,7 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import net.bytebuddy.implementation.bytecode.Throw;
 import pages.*;
+import support.RestWrapper;
 import support.TestContext;
 
 import java.util.HashMap;
@@ -133,6 +134,49 @@ public class CareerStepDefs {
 
         assertThat(marked).isTrue();
 
+
+    }
+
+    @And("^I apply to a new position using RestAPI$")
+    public void iApplyToANewPositionUsingRestAPI() throws Throwable{
+        HashMap<String, String> recruiter = TestContext.getData("recruiter");
+        RestWrapper restWrapper = new RestWrapper();
+
+        restWrapper.login(recruiter);
+
+        restWrapper.createPosition(TestContext.getPostion());
+
+        setTestData("jobId", restWrapper.getJobID());
+
+        getDriver().navigate().refresh();
+
+        new LandingPage().clickPositionfromID(restWrapper.getJobID());
+        Apply apply = new Apply();
+        apply.clickApply();
+
+        HashMap <String, String> applicant = getCandidate();
+        //String email = applicant.get("email");
+        String email = TestContext.addTimestampEmail();
+        applicant.put("email", email);
+        setTestData("candidateEmail", email);
+
+        apply.fillCandidate(applicant);
+        apply.clickSubmit();
+
+    }
+
+    @And("^I see position in my jobs using RestAPI$")
+    public void iSeePositionInMyJobsUsingRestAPI() throws Throwable{
+        String job = getTestData("jobId");
+
+        boolean isJobThere = new MyJobs().isJobThere(job);
+        assertThat(isJobThere).isTrue();
+
+        //Clean up
+        RestWrapper restWrapper = new RestWrapper();
+        HashMap<String, String> recruiter = TestContext.getData("recruiter");
+        restWrapper.login(recruiter);
+        restWrapper.deletePosition(job);
 
     }
 }

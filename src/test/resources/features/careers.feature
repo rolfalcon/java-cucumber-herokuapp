@@ -1,3 +1,4 @@
+@careers
 Feature:  Heroukupp page
 
 
@@ -17,6 +18,12 @@ Feature:  Heroukupp page
     Then I verify profile is created
     And I see position in my jobs
 
+  @careers2-1
+  Scenario: Careers candidate scenario using RESTAPI
+    Given I open "careers" page           
+    And I apply to a new position using RestAPI
+    Then I verify profile is created
+    And I see position in my jobs using RestAPI
 
   @careers3
   Scenario: Careers adds new job
