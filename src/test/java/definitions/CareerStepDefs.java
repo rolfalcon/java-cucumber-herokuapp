@@ -1,14 +1,20 @@
 package definitions;
 
+import cucumber.api.PendingException;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import gherkin.deps.com.google.gson.JsonObject;
 import net.bytebuddy.implementation.bytecode.Throw;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import pages.*;
 import support.RestWrapper;
 import support.TestContext;
 
+
+import java.io.IOException;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,7 +78,7 @@ public class CareerStepDefs {
     @And("^I verify position created$")
     public void iVerifyPositionCreated() throws Exception {
 
-        boolean isPresent = new Recruiter().isPositionPresentOnPage(TestContext.getTestData("positionTitle"));
+        boolean isPresent = new Recruiter().isPositionPresentOnPage((String)TestContext.getTestData("positionTitle"));
         assertThat(isPresent).isTrue();
     }
 
@@ -99,7 +105,7 @@ public class CareerStepDefs {
 
     @And("^I see position in my jobs$")
     public void iSeePositionInMyJobs() throws Throwable{
-        String job = getTestData("jobId");
+        String job = (String)getTestData("jobId");
 
         boolean isJobThere = new MyJobs().isJobThere(job);
         assertThat(isJobThere).isTrue();
@@ -129,7 +135,7 @@ public class CareerStepDefs {
     @Then("^I see position marked as applied$")
     public void iSeePositionMarkedAsApplied() throws Throwable {
 
-        String appliedNewJob = getTestData("jobId");
+        String appliedNewJob = (String)getTestData("jobId");
         boolean marked = new Candidate().isJobMarked(appliedNewJob);
 
         assertThat(marked).isTrue();
@@ -140,14 +146,15 @@ public class CareerStepDefs {
     @And("^I apply to a new position using RestAPI$")
     public void iApplyToANewPositionUsingRestAPI() throws Throwable{
         HashMap<String, String> recruiter = TestContext.getData("recruiter");
+
+        //Calls api, using recruiter login and creates a new position
         RestWrapper restWrapper = new RestWrapper();
-
         restWrapper.login(recruiter);
-
         restWrapper.createPosition(TestContext.getPostion());
 
         setTestData("jobId", restWrapper.getJobID());
 
+        //Refresh the page with new position created from API calls
         getDriver().navigate().refresh();
 
         new LandingPage().clickPositionfromID(restWrapper.getJobID());
@@ -167,7 +174,7 @@ public class CareerStepDefs {
 
     @And("^I see position in my jobs using RestAPI$")
     public void iSeePositionInMyJobsUsingRestAPI() throws Throwable{
-        String job = getTestData("jobId");
+        String job = (String) getTestData("jobId");
 
         boolean isJobThere = new MyJobs().isJobThere(job);
         assertThat(isJobThere).isTrue();
@@ -177,6 +184,56 @@ public class CareerStepDefs {
         HashMap<String, String> recruiter = TestContext.getData("recruiter");
         restWrapper.login(recruiter);
         restWrapper.deletePosition(job);
+
+    }
+
+    @Given("^I login to REST as \"([^\"]*)\"$")
+    public void iLoginToRESTAs(String role) throws Throwable {
+        // Write code here that turns the phrase above into concrete actions
+
+        HashMap<String, String> roleMap = TestContext.getData(role);
+        RestWrapper restWrapper = new RestWrapper().login(roleMap);
+
+
+
+    }
+
+    @When("^I create via REST new position$")
+    public void iCreateViaRESTNewPosition() throws Exception {
+        new RestWrapper().createPosition(getPositionWithTimestamp());
+
+    }
+
+    @Then("^I verify via REST new position in the list$")
+    public void iVerifyViaRESTNewPositionInTheList() throws Exception {
+        JSONArray actualPositions = new RestWrapper().getPositions();
+        JSONObject expectedPosition = getJsonTestData(RestWrapper.POSITION);
+
+        boolean found = false;
+
+        for (int i = 0; i < actualPositions.length(); i++) {
+            JSONObject actualPosition = actualPositions.getJSONObject(i);
+            if (actualPosition.getInt("id") == expectedPosition.getInt("id")) {
+                found = true;
+                break;
+            }
+        }
+        assertThat(found).isTrue();
+    }
+
+    @And("^I update via REST new position$")
+    public void iUpdateViaRESTNewPosition() throws Exception {
+        new RestWrapper().updatePosition((JSONObject)getTestData(RestWrapper.POSITION));
+
+    }
+
+
+    @Then("^I verify via REST position details$")
+    public void iVerifyViaRESTPositionDetails() throws Exception{
+        boolean verify = new RestWrapper().verifyPosition((JSONObject)getTestData(RestWrapper.POSITION));
+
+        assertThat(verify).isTrue();
+
 
     }
 }

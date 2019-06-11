@@ -1,9 +1,10 @@
 // Created by Viacheslav (Slava) Skryabin 04/01/2018
 package support;
 
+import org.json.JSONObject;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -35,13 +36,13 @@ public class TestContext {
     }
 
 
-    private static HashMap<String, String> testData = new HashMap<>();
+    private static HashMap<String, Object> testData = new HashMap<>();
 
-    public static void setTestData(String key, String value) {
+    public static void setTestData(String key, Object value) {
         testData.put(key, value);
     }
 
-    public static String getTestData(String value) throws Exception{
+    public static Object getTestData(String value) throws Exception{
         return testData.get(value);
     }
 
@@ -81,6 +82,22 @@ public class TestContext {
     public static String addTimestampEmail() {
         String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         return "rol"+timestamp +"@example.com";
+    }
+
+    public static HashMap<String, String> getPosition() throws Exception {
+        return getData("position");
+    }
+
+    public static JSONObject getJsonTestData(String key) {
+        return (JSONObject)testData.get(key);
+    }
+
+    public static HashMap<String, String> getPositionWithTimestamp() throws Exception {
+        HashMap<String, String> position = getPosition();
+        String title = position.get("title");
+        title = addTimestamp(title);
+        position.put("title", title);
+        return position;
     }
 
     public static void initialize() {
